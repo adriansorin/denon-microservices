@@ -1,0 +1,11 @@
+# Dockerfile used for local development, using Denon
+# to restart Deno when the source code changes
+
+FROM hayd/alpine-deno:1.4.4
+
+WORKDIR /microservice
+#USER deno
+
+RUN apk update && apk add bash
+
+RUN ["deno", "install", "--allow-read", "--allow-run", "--allow-write", "--allow-net", "-f", "--unstable", "https://deno.land/x/denon@2.4.4/denon.ts"]

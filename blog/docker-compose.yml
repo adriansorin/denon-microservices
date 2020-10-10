@@ -1,0 +1,21 @@
+version: "3"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    volumes:
+      - ./scripts/wait-for-it.sh:/microservice/wait-for-it.sh
+      - ./:/microservice
+    ports:
+      - 8000:8000
+    env_file: .env
+    depends_on:
+      - db
+    command: ["./wait-for-it.sh", "db:5432", "-t", "30", "--", "/usr/local/bin/denon", "run", "--allow-env", "--allow-net", "service/server.ts"]
+  db:
+    image: postgres:12.3
+    env_file: .env
+    volumes:
+      - ./data:/docker-entrypoint-initdb.d

@@ -1,0 +1,12 @@
+// .vscode/settings.json
+{
+    "deno.enable": true,
+    "deno.import_intellisense_origins": {
+        "https://deno.land": true
+    },
+    "spaces-inside-braces.enable": true,
+    "spaces-inside-braces.enableForBraces": true,
+    "spaces-inside-braces.enableForParens": true,
+    "spaces-inside-braces.enableForBrackets": true,
+    "spaces-inside-braces.enableForAngle": true
+}
