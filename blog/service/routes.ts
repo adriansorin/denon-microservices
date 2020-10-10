@@ -2,11 +2,13 @@ import {
     createRouteMap,
     jsonResponse,
     forMethod,
+    AugmentedRequest,
     DBPool,
-    uuidv4
+    uuidv4,
+    withJsonBody,
 } from "../deps.ts";
 
-import createBlogService from "./blog_service.ts";
+import createBlogService, { BlogService, CreatePostPayload, EditPostPayload } from "./blog_service.ts";
 import createDbService from "./db_service.ts";
 
 
@@ -27,14 +29,51 @@ const dbPool = new DBPool(createClientOpts(), getPoolConnectionCount());
 
 const blogService = createBlogService(createDbService(dbPool), uuidv4.generate);
 
-async function getPosts() {
-    const res = await blogService.getPosts();
+export class PostNotFoundError extends Error {
+    constructor(id: string) {
+      super(`Post not found with ID ${id}`);
+    }
+}
+
+async function getPost(blogService: BlogService, id: string) {
+    const res = await blogService.getPost(id);
+    if (!res) {
+        throw new PostNotFoundError(`Post not found with ID ${id}`);
+    }
+    return res;
+  }
+
+async function getPosts({ routeParams: [id] }: AugmentedRequest) {
+    const res = await (id ? getPost(blogService, id) : blogService.getPosts());
     return jsonResponse(res);
 }
 
+const addPost = withJsonBody<CreatePostPayload>(
+    // @ts-ignore
+    async function addPost({ body }) {
+      const id = await blogService.createPost(body);
+      return jsonResponse({ id });
+    },
+);
+
+const editPost = withJsonBody<EditPostPayload>(
+    // @ts-ignore
+    async function editPost({ body: { contents }, routeParams: [id] }) {
+      const rowCount = await blogService.editPost(id, contents);
+  
+      if (rowCount === 0) {
+        throw new PostNotFoundError(id);
+      }
+  
+      return jsonResponse({ id });
+    },
+);
+
 const routes = createRouteMap([
-    ["/posts", forMethod([
+    ["/posts/*", forMethod([
         ["GET", getPosts],
+        ["POST", addPost],
+        ["PATCH", editPost],
     ])],
 ]);
 

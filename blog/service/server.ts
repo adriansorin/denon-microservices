@@ -3,9 +3,10 @@ import {
   ServerRequest,
   textResponse,
   createRouter,
+  NotFoundError,
 } from "../deps.ts";
 
-import routes from "./routes.ts";
+import routes, { PostNotFoundError } from "./routes.ts";
 
 const BINDING = ":8000";
 
@@ -43,6 +44,9 @@ function serverError(e: Error) {
 
 function mapToErrorResponse(e: Error) {
   switch (e.constructor) {
+    case NotFoundError:
+    case PostNotFoundError:
+      return notFound(e);
     default:
       return serverError(e);
   }
